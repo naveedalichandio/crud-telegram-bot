@@ -22,6 +22,10 @@ const User = require("../model/User");
         const dueDate = match[2];
         const formatedDate = dateHandler(dueDate, bot, chatId);
 
+        if (formatedDate == null) {
+            return;
+        }
+
         try {
             const task = await Task.findOne({ telegramId });
             if (!task) {
@@ -54,6 +58,10 @@ const User = require("../model/User");
             const newDescription = match[2];
             const newDueDate = match[3];
             const formatedDate = dateHandler(newDueDate, bot, chatId);
+
+            if (formatedDate == null) {
+                return;
+            }
 
             try {
                 if (!(await isAuthenticated(telegramId))) {

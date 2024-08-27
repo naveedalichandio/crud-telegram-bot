@@ -38,7 +38,6 @@ exports.dateHandler = (dateString, bot, chatId) => {
         return taskDate; // Return the valid task date
     } catch (error) {
         console.log(error);
-        bot.sendMessage(chatId, "An error occurred while processing the date.");
         return null;
     }
 };
