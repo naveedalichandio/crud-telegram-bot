@@ -9,7 +9,6 @@ const saltRounds = 10;
 
     // Command: /register <username> <password>
     bot.onText(/\/register (.+) (.+)/, async (msg, match) => {
-        console.log("register called");
         const chatId = msg.chat.id;
         const telegramId = msg.from.id;
         const username = match[1];

@@ -19,10 +19,8 @@ const User = require("../model/User");
         }
 
         const description = match[1];
-        const dueDate = new Date(match[2]);
-        console.log({ description, dueDate });
+        const dueDate = match[2];
         const formatedDate = dateHandler(dueDate, bot, chatId);
-        console.log({ formatedDate });
 
         try {
             const task = await Task.findOne({ telegramId });
@@ -56,8 +54,6 @@ const User = require("../model/User");
             const newDescription = match[2];
             const newDueDate = match[3];
             const formatedDate = dateHandler(newDueDate, bot, chatId);
-
-            console.log({ taskId, newDescription, newDueDate });
 
             try {
                 if (!(await isAuthenticated(telegramId))) {
@@ -146,34 +142,35 @@ const User = require("../model/User");
     const sendRemindersAndSummary = async () => {
         const users = await User.find();
 
-        users.forEach((user) => {
-            user.tasks.forEach((task) => {
-                const timeUntilDue = task.dueDate - new Date();
-                if (timeUntilDue <= 3600000 && timeUntilDue > 0) {
-                    // 1 hour before due
-                    bot.sendMessage(
-                        user.telegramId,
-                        `Reminder: Task "${task.description}" is due in 1 hour.`
-                    );
-                }
-            });
-
-            const pendingTasks = user.tasks.filter(
-                (task) => task.dueDate > new Date()
-            );
-            if (pendingTasks.length > 0) {
-                let summary = "Daily Task Summary:\n";
-                pendingTasks.forEach((task, index) => {
-                    summary += `${index + 1}. ${task.description} - Due: ${
-                        task.dueDate
-                    }\n`;
+        users?.forEach((user) => {
+            if (user?.tasks.length > 0) {
+                user.tasks.forEach((task) => {
+                    const timeUntilDue = task.dueDate - new Date();
+                    if (timeUntilDue <= 3600000 && timeUntilDue > 0) {
+                        // 1 hour before due
+                        bot.sendMessage(
+                            user.telegramId,
+                            `Reminder: Task "${task.description}" is due in 1 hour.`
+                        );
+                    }
                 });
-                bot.sendMessage(user.telegramId, summary);
+
+                const pendingTasks = user.tasks.filter(
+                    (task) => task.dueDate > new Date()
+                );
+                if (pendingTasks.length > 0) {
+                    let summary = "Daily Task Summary:\n";
+                    pendingTasks.forEach((task, index) => {
+                        summary += `${index + 1}. ${task.description} - Due: ${
+                            task.dueDate
+                        }\n`;
+                    });
+                    bot.sendMessage(user.telegramId, summary);
+                }
             }
         });
     };
 
     // Schedule reminders and daily summaries at specific times
-    //3600000
-    setInterval(sendRemindersAndSummary, 120000); // Run every hour
+    setInterval(sendRemindersAndSummary, 3600000); // Run every hour
 })();
