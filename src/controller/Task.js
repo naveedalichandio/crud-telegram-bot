@@ -1,6 +1,7 @@
 const Task = require("../model/Tasks");
 const { isAuthenticated } = require("../helpers/Authentication");
 const { getBot } = require("../config/config");
+const { dateHandler } = require("../helpers/DateHandler");
 
 (async () => {
     let bot = await getBot();
@@ -18,17 +19,18 @@ const { getBot } = require("../config/config");
 
         const description = match[1];
         const dueDate = new Date(match[2]);
+        const formatedDate = dateHandler(dueDate, bot, chatId);
 
         try {
             const task = await Task.findOne({ telegramId });
             if (!task) {
                 let data = {
                     telegramId,
-                    tasks: [{ description, dueDate }],
+                    tasks: [{ description, formatedDate }],
                 };
                 await Task.create(data);
             } else {
-                task.tasks.push({ description, dueDate });
+                task.tasks.push({ description, formatedDate });
                 await task.save();
             }
             bot.sendMessage(chatId, "Task created successfully.");
@@ -46,6 +48,7 @@ const { getBot } = require("../config/config");
         const taskId = match[1];
         const newDescription = match[2];
         const newDueDate = new Date(match[3]);
+        const formatedDate = dateHandler(newDueDate, bot, chatId);
 
         try {
             if (!(await isAuthenticated(telegramId))) {
@@ -59,7 +62,7 @@ const { getBot } = require("../config/config");
                 const record = task.tasks.find((t) => t._id === taskId);
                 if (record) {
                     record.description = newDescription;
-                    record.dueDate = newDueDate;
+                    record.dueDate = formatedDate;
                     await task.save();
                     bot.sendMessage(chatId, "Task updated successfully.");
                 } else {
