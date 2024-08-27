@@ -3,8 +3,7 @@ const mongoose = require("mongoose");
 // Defining the model
 const taskSchema = new mongoose.Schema({
     telegramId: {
-        type: mongoose.Schema.ObjectId,
-        ref: "User",
+        type: String,
     },
     tasks: [{ description: String, dueDate: Date }],
 });
