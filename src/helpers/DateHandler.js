@@ -1,39 +1,44 @@
 exports.dateHandler = (dateString, bot, chatId) => {
     try {
-        // Parse the input date string into a Date object
-        const inputDate = new Date(dateString);
+        // Split the date string into day and month
+        const [day, month] = dateString.split("/").map(Number);
 
-        // Check if the date is valid
-        if (isNaN(inputDate.getTime())) {
+        // Validate day and month
+        if (
+            isNaN(day) ||
+            isNaN(month) ||
+            day < 1 ||
+            day > 31 ||
+            month < 1 ||
+            month > 12
+        ) {
             bot.sendMessage(
                 chatId,
-                "Invalid date format. Please provide a valid date."
+                "Invalid date format. Please provide a valid date in DD/MM format."
             );
             return null;
         }
 
-        // Get the current date and current year
+        // Get the current date and year
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
 
-        // Extract the month and date from the input date, and set the year to the current year
-        const taskDate = new Date(
-            currentYear,
-            inputDate.getMonth(),
-            inputDate.getDate()
-        );
+        // Create a new date object with the current year
+        const taskDate = new Date(currentYear, month - 1, day); // month is 0-based in JavaScript
 
-        // Check if the taskDate (with the current year) is in the past
+        // Check if the taskDate is in the past
         if (taskDate < currentDate) {
             bot.sendMessage(
                 chatId,
                 "Can't select a date in the past. Please choose a future date."
             );
-            return null;
+            return null; // Return null to indicate an invalid date
         }
 
-        return taskDate;
+        return taskDate; // Return the valid task date
     } catch (error) {
         console.log(error);
+        bot.sendMessage(chatId, "An error occurred while processing the date.");
+        return null;
     }
 };

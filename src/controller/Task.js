@@ -54,7 +54,7 @@ const User = require("../model/User");
             const telegramId = msg.from.id;
             const taskId = match[1];
             const newDescription = match[2];
-            const newDueDate = new Date(match[3]);
+            const newDueDate = match[3];
             const formatedDate = dateHandler(newDueDate, bot, chatId);
 
             console.log({ taskId, newDescription, newDueDate });
