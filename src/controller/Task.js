@@ -57,7 +57,7 @@ const User = require("../model/User");
             const newDueDate = new Date(match[3]);
             const formatedDate = dateHandler(newDueDate, bot, chatId);
 
-            console.log({ taskId });
+            console.log({ taskId, newDescription, newDueDate });
 
             try {
                 if (!(await isAuthenticated(telegramId))) {
@@ -68,7 +68,9 @@ const User = require("../model/User");
                 }
                 const task = await Task.findOne({ telegramId });
                 if (task) {
-                    const record = task.tasks.find((t) => t._id === taskId);
+                    const record = task.tasks.find(
+                        (t) => t._id.toString() == taskId
+                    );
                     if (record) {
                         record.description = newDescription;
                         record.dueDate = formatedDate;
@@ -98,7 +100,7 @@ const User = require("../model/User");
         try {
             const task = await Task.findOne({ telegramId });
             if (task) {
-                task.tasks.id(taskId).remove();
+                task.tasks._id(taskId).remove();
                 await task.save();
                 bot.sendMessage(chatId, "Task deleted successfully.");
             } else {
