@@ -128,9 +128,9 @@ const User = require("../model/User");
             if (task && task.tasks.length > 0) {
                 let taskList = "Your tasks:\n";
                 task.tasks.forEach((task, index) => {
-                    taskList += `${index + 1}. ${task.description} - Due: ${
-                        task.dueDate
-                    }\n`;
+                    taskList += `${index + 1}.ID ${task._id} ${
+                        task.description
+                    } - Due: ${task.dueDate}\n`;
                 });
                 bot.sendMessage(chatId, taskList);
             } else {
