@@ -104,8 +104,14 @@ const User = require("../model/User");
         try {
             const task = await Task.findOne({ telegramId });
             if (task) {
-                task.tasks._id(taskId).remove();
-                await task.save();
+                await Task.updateOne(
+                    { telegramId: telegramId }, // Filter by the document's telegramId
+                    {
+                        $pull: {
+                            tasks: { _id: taskId }, // Remove the task with the specific taskId
+                        },
+                    }
+                );
                 bot.sendMessage(chatId, "Task deleted successfully.");
             } else {
                 bot.sendMessage(chatId, "No task found.");
