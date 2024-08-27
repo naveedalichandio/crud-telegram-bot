@@ -2,11 +2,12 @@ const Task = require("../model/Tasks");
 const { isAuthenticated } = require("../helpers/Authentication");
 const { getBot } = require("../config/config");
 const { dateHandler } = require("../helpers/DateHandler");
+const User = require("../model/User");
 
 (async () => {
     let bot = await getBot();
 
-    bot.onText(/\/create_task (.+) (.+)/, async (msg, match) => {
+    bot.onText(/\/create_task (.+) (\d{2}\/\d{2})/, async (msg, match) => {
         const chatId = msg.chat.id;
         const telegramId = msg.from.id;
 
@@ -19,7 +20,9 @@ const { dateHandler } = require("../helpers/DateHandler");
 
         const description = match[1];
         const dueDate = new Date(match[2]);
+        console.log({ description, dueDate });
         const formatedDate = dateHandler(dueDate, bot, chatId);
+        console.log({ formatedDate });
 
         try {
             const task = await Task.findOne({ telegramId });
@@ -42,45 +45,50 @@ const { dateHandler } = require("../helpers/DateHandler");
         }
     });
 
-    bot.onText(/\/update_task (.+) (.+) (.+)/, async (msg, match) => {
-        const chatId = msg.chat.id;
-        const telegramId = msg.from.id;
-        const taskId = match[1];
-        const newDescription = match[2];
-        const newDueDate = new Date(match[3]);
-        const formatedDate = dateHandler(newDueDate, bot, chatId);
+    bot.onText(
+        /\/update_task (\S+) (.+) (\d{2}\/\d{2})/,
+        async (msg, match) => {
+            const chatId = msg.chat.id;
+            const telegramId = msg.from.id;
+            const taskId = match[1];
+            const newDescription = match[2];
+            const newDueDate = new Date(match[3]);
+            const formatedDate = dateHandler(newDueDate, bot, chatId);
 
-        try {
-            if (!(await isAuthenticated(telegramId))) {
-                return bot.sendMessage(
+            console.log({ taskId });
+
+            try {
+                if (!(await isAuthenticated(telegramId))) {
+                    return bot.sendMessage(
+                        chatId,
+                        "You need to log in first using /login command."
+                    );
+                }
+                const task = await Task.findOne({ telegramId });
+                if (task) {
+                    const record = task.tasks.find((t) => t._id === taskId);
+                    if (record) {
+                        record.description = newDescription;
+                        record.dueDate = formatedDate;
+                        await task.save();
+                        bot.sendMessage(chatId, "Task updated successfully.");
+                    } else {
+                        bot.sendMessage(chatId, "Task not found.");
+                    }
+                } else {
+                    bot.sendMessage(chatId, "No data found.");
+                }
+            } catch (error) {
+                bot.sendMessage(
                     chatId,
-                    "You need to log in first using /login command."
+                    "There was an error updating the task. Please try again."
                 );
             }
-            const task = await Task.findOne({ telegramId });
-            if (task) {
-                const record = task.tasks.find((t) => t._id === taskId);
-                if (record) {
-                    record.description = newDescription;
-                    record.dueDate = formatedDate;
-                    await task.save();
-                    bot.sendMessage(chatId, "Task updated successfully.");
-                } else {
-                    bot.sendMessage(chatId, "Task not found.");
-                }
-            } else {
-                bot.sendMessage(chatId, "No data found.");
-            }
-        } catch (error) {
-            bot.sendMessage(
-                chatId,
-                "There was an error updating the task. Please try again."
-            );
         }
-    });
+    );
 
     // Command - /delete_task <task_id>
-    bot.onText(/\/delete_task (.+)/, async (msg, match) => {
+    bot.onText(/\/delete_task (\S+)/, async (msg, match) => {
         const chatId = msg.chat.id;
         const telegramId = msg.from.id;
         const taskId = match[1];
@@ -130,4 +138,38 @@ const { dateHandler } = require("../helpers/DateHandler");
             );
         }
     });
+
+    const sendRemindersAndSummary = async () => {
+        const users = await User.find();
+
+        users.forEach((user) => {
+            user.tasks.forEach((task) => {
+                const timeUntilDue = task.dueDate - new Date();
+                if (timeUntilDue <= 3600000 && timeUntilDue > 0) {
+                    // 1 hour before due
+                    bot.sendMessage(
+                        user.telegramId,
+                        `Reminder: Task "${task.description}" is due in 1 hour.`
+                    );
+                }
+            });
+
+            const pendingTasks = user.tasks.filter(
+                (task) => task.dueDate > new Date()
+            );
+            if (pendingTasks.length > 0) {
+                let summary = "Daily Task Summary:\n";
+                pendingTasks.forEach((task, index) => {
+                    summary += `${index + 1}. ${task.description} - Due: ${
+                        task.dueDate
+                    }\n`;
+                });
+                bot.sendMessage(user.telegramId, summary);
+            }
+        });
+    };
+
+    // Schedule reminders and daily summaries at specific times
+    //3600000
+    setInterval(sendRemindersAndSummary, 120000); // Run every hour
 })();
