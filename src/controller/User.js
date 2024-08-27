@@ -27,7 +27,10 @@ const saltRounds = 10;
                     password: hashedPassword,
                 };
                 await User.create(newUser);
-                bot.sendMessage(chatId, "Registration successful.");
+                bot.sendMessage(
+                    chatId,
+                    "Registration successful. use /login <username> <password> to login"
+                );
             }
         } catch (error) {
             bot.sendMessage(
