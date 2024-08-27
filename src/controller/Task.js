@@ -29,11 +29,11 @@ const User = require("../model/User");
             if (!task) {
                 let data = {
                     telegramId,
-                    tasks: [{ description, formatedDate }],
+                    tasks: [{ description, dueDate: formatedDate }],
                 };
                 await Task.create(data);
             } else {
-                task.tasks.push({ description, formatedDate });
+                task.tasks.push({ description, dueDate: formatedDate });
                 await task.save();
             }
             bot.sendMessage(chatId, "Task created successfully.");
