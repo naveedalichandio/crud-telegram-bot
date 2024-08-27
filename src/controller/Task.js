@@ -38,9 +38,11 @@ const User = require("../model/User");
             }
             bot.sendMessage(chatId, "Task created successfully.");
         } catch (error) {
+            console.log({ error });
             bot.sendMessage(
                 chatId,
-                "There was an error creating the task. Please try again."
+                "There was an error creating the task. Please try again.",
+                error
             );
         }
     });
