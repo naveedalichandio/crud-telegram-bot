@@ -1,16 +1,29 @@
 exports.dateHandler = (dateString, bot, chatId) => {
     try {
-        //  get day and month
-        const [day, month] = dateString.split("/").map(Number);
+        // Parse the input date string into a Date object
+        const inputDate = new Date(dateString);
 
-        // Get the current date details
+        // Check if the date is valid
+        if (isNaN(inputDate.getTime())) {
+            bot.sendMessage(
+                chatId,
+                "Invalid date format. Please provide a valid date."
+            );
+            return null;
+        }
+
+        // Get the current date and current year
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
 
-        // Create a date object using the current year
-        let taskDate = new Date(currentYear, month - 1, day);
+        // Extract the month and date from the input date, and set the year to the current year
+        const taskDate = new Date(
+            currentYear,
+            inputDate.getMonth(),
+            inputDate.getDate()
+        );
 
-        // Check if the taskDate is in the past
+        // Check if the taskDate (with the current year) is in the past
         if (taskDate < currentDate) {
             bot.sendMessage(
                 chatId,
@@ -19,7 +32,7 @@ exports.dateHandler = (dateString, bot, chatId) => {
             return null;
         }
 
-        return taskDate; // Return the valid task date
+        return taskDate;
     } catch (error) {
         console.log(error);
     }
